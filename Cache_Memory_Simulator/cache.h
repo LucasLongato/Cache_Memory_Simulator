@@ -2,7 +2,7 @@
 // => Política de substituição: fifo
 // => Mecanismo de coerência de escritas: WB
 // => Política de alocação durante escritas: WNA
-// meu codig
+
 //simulador de memoria cache metodo fifo associativo wb wna
 // bloco de cache
 typedef struct Cache {
@@ -10,13 +10,10 @@ typedef struct Cache {
     int isValid;
     int isDirty;
     int data;
+    int time;
 } Cache;
 
-// estrutura de cache
-// typedef struct cache {
-//     cache_block blocks[ASSOCIABILITY];
-// } cache;
-
+void printCache();
 void printCacheStats(Cache *listaCacheBlock);
 int checkCache(Cache *listaCacheBlock, int address);
 void initCache(Cache *listaCacheBlock);

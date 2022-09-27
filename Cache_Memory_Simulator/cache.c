@@ -6,11 +6,13 @@
 // => Política de substituição: fifo
 // => Mecanismo de coerência de escritas: WB
 // => Política de alocação durante escritas: WNA
-// meu codig
 //simulador de memoria cache metodo fifo associativo wb wna
 
-//define a associabilidade
-#define ASSOCIABILITY 4
+//metodo de leitura:
+//tamanho da cache | tamanho do bloco | tempo de acesso | método de substituição
+//método de coerência | método de alocação | tempo de leitura | tempo de escrita 
+//n de requisições da cpu 
+
 //define o tamanho da TAG 
 #define TAG_SIZE 4
 //define o tamanho do indice
@@ -18,8 +20,19 @@
 //define o tamanho do offset
 #define OFFSET_SIZE 4
 
+int associability = 4;
+int cacheSize = 16;
+int blockSize = 4;
+char substituitionMethod[] = "FIFO";
+char coherenceMethod[] = "WB";
+char alocationMethod[] = "WNA";
+int cacheAccessTime = 1;
+int dRamWriteTime = 300;
+int dRamReadTime = 500;
+
+
 // decimal para binario
-int decimalToBinary(int n){{
+int decimalToBinary(int n){
     int binaryNumber = 0;
     int remainder, i = 1, step = 1;
     while (n!=0){
@@ -37,13 +50,12 @@ void initCache(Cache *listaCacheBlock){
     int index=0;
     int totalCont=0;        //contador total de blocos
 
-    for (int i = 0; i < INDEX_SIZE; i++){
+    for (int i = 0; i < blockSize; i++){
         if(i%2==0){
             index=0;
         }else index=1;
 
-        for(int j=0; j<ASSOCIABILITY; j++){
-            listaCacheBlock[totalCont] = (Cache *)malloc(sizeof(Cache));
+        for(int j=0; j<associability; j++){
             listaCacheBlock[totalCont].tag = index;
             listaCacheBlock[totalCont].isValid = 0;
             listaCacheBlock[totalCont].isDirty = 0;
@@ -51,18 +63,20 @@ void initCache(Cache *listaCacheBlock){
             totalCont++;
         }
     }
+    listaCacheBlock = malloc(totalCont * sizeof(Cache));
+    if(cacheSize != totalCont){
+        printf("\n---------ERROR---------\nO tamanho da cache não bate com os parâmetros");
+        exit(1);
+    }
 }
 
-
-
-
-
-//imprimi a cache
+//imprime a cache
 void printCacheStats(Cache *listaCacheBlock){
-    for (int i = 0; i < (INDEX_SIZE*ASSOCIABILITY); i++){
-        if(i%ASSOCIABILITY==0){
-            printf("\n----------- CACHE INDEX %d -----------", i/4);
+    for (int i = 0; i < (blockSize*associability); i++){
+        if(i%associability==0){
+            printf("\n----------- CACHE INDEX %d -----------", i/associability);
         }
+        
         if(listaCacheBlock[i].isValid == 1){
             printf("\nIs valid");
         }else{
@@ -80,6 +94,16 @@ void printCacheStats(Cache *listaCacheBlock){
     
 }
 
+//imprime a cache de outra forma
+void printCache(){
+    printf("%d %d %d ", cacheSize, associability, blockSize);
+    printf("%s ", substituitionMethod);
+    printf("%s ", coherenceMethod);
+    printf("%s ", alocationMethod);
+    printf("%d %d %d ", cacheAccessTime, dRamReadTime, dRamWriteTime);
+    
+}
+
 //libera a cache
 void freecache(Cache *listaCacheBlock){
     free(listaCacheBlock);
@@ -91,18 +115,16 @@ int checkCache(Cache *listaCacheBlock, int address){
     int tag = address & 0x000000F0;
     int offset = address & 0x000000F00;
     int i;
-    for(i = 0; i < ASSOCIABILITY; i++){
-        if(listaCacheBlock[index*ASSOCIABILITY+i].isValid == 1 && listaCacheBlock[index*ASSOCIABILITY+i].tag == tag){
-            return listaCacheBlock[index*ASSOCIABILITY+i].data;
-        }
-    // if(cache1.blocks[index].isValid == 1 && cache1.blocks[index].tag == tag){
-    //     return cache1.blocks[index].data[offset];
-    }else return -1;
+    for(i = 0; i < associability; i++){
+        if(listaCacheBlock[index*associability+i].isValid == 1 && listaCacheBlock[index*associability+i].tag == tag){
+            return listaCacheBlock[index*associability+i].data;
+        }else return -1;
+    }
     
 }
 
 // Define o deslocamento do endereço
-void 
+// void 
 
 // Define o índice do endereço baseado na tag e no indice
 
@@ -115,7 +137,7 @@ int writeCache(Cache *listaCacheBlock, int address, int value){
     int tag = address & 0x000000F0;
     int offset = address & 0x000000F00;
     if(listaCacheBlock[index].isValid == 1 && listaCacheBlock[index].tag == tag){
-        listaCacheBlock[index].data[offset] = value;
+        listaCacheBlock[index].data = value;
         listaCacheBlock[index].isDirty = 1;
         return 1;
     }else{
@@ -134,7 +156,7 @@ int FIFO(Cache *listaCacheBlock){
     //tempo de entrada do bloco que será substituido
     int timeSub = 0;
     //percorre a cache
-    for(int i = 0; i < (INDEX_SIZE*ASSOCIABILITY); i++){
+    for(int i = 0; i < (blockSize*associability); i++){
         //se o bloco for valido
         if(listaCacheBlock[i].isValid == 1){
             //se o bloco for o primeiro da lista
@@ -167,22 +189,17 @@ int FIFO(Cache *listaCacheBlock){
 
 
 int main(){
-    printf("Bem vindos ao simulador de memoria cache metodo fifo\n");
-    printf("Com os metodos");
-    printf("WB - Write Back\n");
-    printf("WNA - Write No-Allocate\n");
+    printf("Bem vindos ao simulador de memoria cache metodo %s\n", &substituitionMethod);
+    printf("Com o metodo de alocação %s\n", &alocationMethod);
+    printf("e metodo de coerencia %s\n", &coherenceMethod);
 
 
-    listaCacheBlock[4];
+    Cache listaCacheBlock[4];
     initCache(&listaCacheBlock);
-    printCacheStats(&listaCacheBloc)
+    // printCacheStats(&listaCacheBlock);
+    printCache();
 
-    listaCacheBlock[0].isValid = 1;
-    listaCacheBlock[0].tag = 002;
-    listaCacheBlock[0].isDirty = 0;
-    listaCacheBlock[0].data[0] = 5;
-
-    // printCacheStats(cache1);
+    freecache(&listaCacheBlock);
 
     
     
